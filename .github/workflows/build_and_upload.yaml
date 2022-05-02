@@ -1,0 +1,82 @@
+on:
+  workflow_call:
+    inputs:
+      javaVersion:
+        required: false
+        type: string
+        default: '8'
+      gradleModule:
+        required: true
+        type: string
+      gradleTask:
+        required: true
+        type: string
+      packageName:
+        required: false
+        type: string
+      archiveArtifacts:
+        required: false
+        type: boolean
+        default: false
+      upload:
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      keyalias:
+        required: true
+      keyfile:
+        required: true
+      storepassword:
+        required: true
+      keypassword:
+        required: true
+      uploadKey:
+        required: false
+
+jobs:
+  build-and-upload:
+    name: Build and Upload
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ inputs.javaVersion }}
+          distribution: 'adopt'
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+      - name: Setup Options
+        run: |
+          rm -rf ${{ github.WORKSPACE }}/.reports
+          touch local.properties
+          ./gradlew clean --no-daemon
+          mkdir ${{ github.WORKSPACE }}/.reports
+      - name: Assemble Apk
+        env:
+          GRADLE_COMMAND: ":${{ inputs.gradleModule }}:${{ inputs.gradleTask }}"
+          KEYSTORE_PATH: "${{ github.workspace }}/${{ matrix.module }}/release.keystore"
+        run: |
+          echo "${{ secrets.keyfile }}" | base64 --decode > ${{ env.KEYSTORE_PATH }}
+          ./gradlew $GRADLE_COMMAND --quiet --no-daemon -Pandroid.injected.signing.store.file="${{ env.KEYSTORE_PATH }}" -Pandroid.injected.signing.store.password="${{ secrets.storepassword }}" -Pandroid.injected.signing.key.alias="${{ secrets.keyalias }}" -Pandroid.injected.signing.key.password="${{ secrets.keypassword }}"
+      - name: Archive
+        uses: actions/upload-artifact@v3
+        if: ${{ inputs.archiveArtifacts }}
+        with:
+          name: Android Apps
+          retention-days: 2
+          path: |
+            ${{ matrix.module }}/**/*.apk
+            ${{ matrix.module }}/**/*.aab
+      - name: Upload to Google Play
+        if: ${{ inputs.upload }}
+        uses: r0adkll/upload-google-play@v1.0.15
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.uploadkey }}
+          track: internal
+          packageName: ${{ inputs.packageName }}
+          releaseFiles: |
+            '${{ inputs.gradleModule }}/build/outputs/apk/*-release-*.apk'
+            '${{ inputs.gradleModule }}/build/outputs/bundle/*-release-*.aab'
