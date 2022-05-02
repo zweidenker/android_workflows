@@ -77,6 +77,4 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.uploadkey }}
           track: internal
           packageName: ${{ inputs.packageName }}
-          releaseFiles: |
-            '${{ inputs.gradleModule }}/build/outputs/apk/*-release-*.apk'
-            '${{ inputs.gradleModule }}/build/outputs/bundle/*-release-*.aab'
+          releaseFiles: '${{ inputs.gradleModule }}/build/outputs/apk/*-release-*.apk, ${{ inputs.gradleModule }}/build/outputs/bundle/*-release-*.aab'
