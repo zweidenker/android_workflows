@@ -1,0 +1,43 @@
+on:
+  workflow_call:
+    inputs:
+      javaVersion:
+        required: false
+        type: string
+        default: '8'
+      gradleModule:
+        required: true
+        type: string
+      gradleTask:
+        required: true
+        type: string
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ inputs.javaVersion }}
+          distribution: 'adopt'
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+      - name: Setup Options
+        run: |
+          rm -rf ${{ github.WORKSPACE }}/.reports
+          touch local.properties
+          ./gradlew clean --no-daemon
+          mkdir ${{ github.WORKSPACE }}/.reports
+      - name: Run Unit Tests
+        env:
+          COMMAND: ":${{ inputs.gradleModule }}:${{ inputs.gradleTask }}"
+        run: ./gradlew $COMMAND --quiet --no-daemon
+      - name: Publish Test Results
+        uses: mikepenz/action-junit-report@v3
+        if: always()
+        with:
+          report_paths: '**/TEST*.xml'
