@@ -22,6 +22,13 @@ on:
         required: false
         type: boolean
         default: false
+      submodules:
+        required: false
+        type: boolean
+        default: false
+      flutterModulePath:
+        required: false
+        type: string
     secrets:
       keyalias:
         required: true
@@ -41,6 +48,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: submodules
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
@@ -54,6 +63,14 @@ jobs:
           touch local.properties
           ./gradlew clean --no-daemon
           mkdir ${{ github.WORKSPACE }}/.reports
+      - name: Setup Flutter
+        if: ${{ inputs.flutterModulePath != null }}
+        uses: subosito/flutter-action@v2
+      - name: Build Flutter Module
+        if: ${{ inputs.flutterModulePath != null }}
+        working-directory: ${{ inputs.flutterModulePath }}
+        run: |
+          flutter build aar
       - name: Assemble
         env:
           GRADLE_COMMAND: ":${{ inputs.gradleModule }}:${{ inputs.gradleTask }}"
