@@ -51,7 +51,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          submodules: submodules
+          submodules: ${{ inputs.submodules }}
           ssh-key: ${{ secrets.ssh-key }}
       - name: Setup Java
         uses: actions/setup-java@v3
