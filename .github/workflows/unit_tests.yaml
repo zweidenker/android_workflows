@@ -18,6 +18,9 @@ on:
       flutterModulePath:
         required: false
         type: string
+    secrets:
+      token:
+        required: false
 
 jobs:
   unit-tests:
@@ -26,6 +29,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: submodules
+          token: ${{ secrets.token }}
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
