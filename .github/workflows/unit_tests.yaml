@@ -21,6 +21,8 @@ on:
     secrets:
       token:
         required: false
+      ssh-key:
+        required: false
 
 jobs:
   unit-tests:
@@ -32,6 +34,7 @@ jobs:
         with:
           submodules: submodules
           token: ${{ secrets.token }}
+          ssh-key: ${{ secrets.ssh-key }}
       - name: Setup Java
         uses: actions/setup-java@v3
         with:

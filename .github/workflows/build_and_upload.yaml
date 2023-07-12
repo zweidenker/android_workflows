@@ -42,6 +42,8 @@ on:
         required: false
       token:
         required: false
+      ssh-key:
+        required: false
 
 jobs:
   build-and-upload:
@@ -53,6 +55,7 @@ jobs:
         with:
           submodules: submodules
           token: ${{ secrets.token }}
+          ssh-key: ${{ secrets.ssh-key }}
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
