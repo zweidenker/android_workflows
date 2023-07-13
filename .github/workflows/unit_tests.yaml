@@ -11,6 +11,16 @@ on:
       gradleTask:
         required: true
         type: string
+      submodules:
+        required: false
+        type: boolean
+        default: false
+      flutterModulePath:
+        required: false
+        type: string
+    secrets:
+      ssh-key:
+        required: false
 
 jobs:
   unit-tests:
@@ -19,6 +29,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+        with:
+          submodules: ${{ inputs.submodules }}
+          ssh-key: ${{ secrets.ssh-key }}
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
@@ -32,6 +45,14 @@ jobs:
           touch local.properties
           ./gradlew clean --no-daemon
           mkdir ${{ github.WORKSPACE }}/.reports
+      - name: Setup Flutter
+        if: ${{ inputs.flutterModulePath != null }}
+        uses: subosito/flutter-action@v2
+      - name: Build Flutter Module
+        if: ${{ inputs.flutterModulePath != null }}
+        working-directory: ${{ inputs.flutterModulePath }}
+        run: |
+          flutter build aar --no-profile --no-release
       - name: Run Unit Tests
         env:
           COMMAND: ":${{ inputs.gradleModule }}:${{ inputs.gradleTask }}"
