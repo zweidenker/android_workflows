@@ -73,7 +73,7 @@ jobs:
         if: ${{ inputs.flutterModulePath != null }}
         working-directory: ${{ inputs.flutterModulePath }}
         run: |
-          flutter build aar --debug
+          flutter build aar --no-profile --no-debug
       - name: Assemble
         env:
           GRADLE_COMMAND: ":${{ inputs.gradleModule }}:${{ inputs.gradleTask }}"
